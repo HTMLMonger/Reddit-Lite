@@ -12,13 +12,18 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config.update(
-    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL', 'sqlite:///posts.db'),
+    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL'),
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     SQLALCHEMY_ENGINE_OPTIONS={
         'pool_size': 10,
         'pool_recycle': 3600,
         'pool_pre_ping': True
-    }
+    },
+    SQLALCHEMY_ECHO=False,  # Set to True if you want to see the generated SQL statements
+    SQLALCHEMY_POOL_TIMEOUT=30,  # Set a timeout for the database connection pool
+    SQLALCHEMY_POOL_SIZE=10,  # Set the size of the database connection pool
+    SQLALCHEMY_MAX_OVERFLOW=20,  # Set the maximum overflow size of the connection pool
+    SQLALCHEMY_POOL_RECYCLE=3600  # Set the recycle time for the database connections
 )
 
 db = SQLAlchemy(app)
@@ -40,21 +45,10 @@ class Post(db.Model):
 
 def init_db(force=False):
     """Initialize the database and create all tables."""
-    db_path = os.path.join(os.path.dirname(__file__), 'instance', 'posts.db')
-    
-    if force and os.path.exists(db_path):
-        try:
-            os.remove(db_path)
-            logger.info(f"Removed existing database: {db_path}")
-        except Exception as e:
-            logger.error(f"Error removing database: {e}")
-            return False
-
     try:
-        # Ensure the instance folder exists
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
-        
         with app.app_context():
+            if force:
+                db.drop_all()
             db.create_all()
             logger.info("Database tables created successfully")
         return True
@@ -119,7 +113,7 @@ def get_posts():
         per_page = request.args.get('per_page', 20, type=int)
         
         posts = Post.query.order_by(Post.created_utc.desc())\
-                         .paginate(page=page, per_page=per_page, error_out=False)
+            .paginate(page=page, per_page=per_page, error_out=False)
         
         if not posts.items:
             return jsonify({'message': 'No posts found'}), 404
