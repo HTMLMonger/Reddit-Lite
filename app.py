@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config.update(
-    SQLALCHEMY_DATABASE_URI='sqlite:///posts.db',
+    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL', 'sqlite:///posts.db'),
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     SQLALCHEMY_ENGINE_OPTIONS={
         'pool_size': 10,
@@ -177,10 +177,11 @@ def search():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    # Force database reinitialization to add the new column
     if init_db(force=True):
         print("Database reinitialized successfully")
     else:
         print("Failed to reinitialize database")
     
-    app.run(debug=True)
+    # Use environment variables for host and port
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
