@@ -155,10 +155,13 @@ def search():
     try:
         query = request.args.get('query', '').strip()
         subreddit = request.args.get('subreddit', '').strip()
+        pages = int(request.args.get('pages', 1))
         page = int(request.args.get('page', 1))
         per_page = int(request.args.get('per_page', 20))
 
-        # Use database query instead of scraping
+        logger.debug(f"Search params: query={query}, subreddit={subreddit}, pages={pages}, page={page}, per_page={per_page}")
+
+        # Use database query
         posts_query = Post.query
 
         if query:
@@ -166,12 +169,32 @@ def search():
         if subreddit:
             posts_query = posts_query.filter(Post.subreddit == subreddit)
 
+        total_count = posts_query.count()
+        logger.debug(f"Total posts found in database: {total_count}")
+
+        if total_count == 0:
+            # If no results in database, scrape from Reddit
+            logger.debug("No results in database, scraping from Reddit")
+            scraped_posts = scrape_reddit(query=query, max_pages=pages, subreddit=subreddit)
+            
+            # Save scraped posts to database
+            for post_data in scraped_posts:
+                post = Post(**post_data)
+                db.session.add(post)
+            db.session.commit()
+
+            # Rerun the query
+            posts_query = Post.query
+            if query:
+                posts_query = posts_query.filter(Post.title.ilike(f'%{query}%'))
+            if subreddit:
+                posts_query = posts_query.filter(Post.subreddit == subreddit)
+            total_count = posts_query.count()
+
         posts = posts_query.order_by(Post.created_utc.desc()) \
                            .offset((page - 1) * per_page) \
                            .limit(per_page) \
                            .all()
-
-        total_count = posts_query.count()
 
         formatted_posts = [{
             'id': post.id,
@@ -185,6 +208,7 @@ def search():
             'selftext': post.selftext or ''
         } for post in posts]
 
+        logger.debug(f"Returning {len(formatted_posts)} posts")
         return jsonify({
             'posts': formatted_posts,
             'total': total_count,

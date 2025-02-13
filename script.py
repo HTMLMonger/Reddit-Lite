@@ -31,6 +31,7 @@ def fetch_page(base_url, headers, params, after=None):
         return None
 
 def scrape_reddit(max_pages=10, subreddit=None, query=None):
+    logger.debug(f"Scraping Reddit with params: max_pages={max_pages}, subreddit={subreddit}, query={query}")
     client_id = os.getenv('REDDIT_CLIENT_ID')
     client_secret = os.getenv('REDDIT_CLIENT_SECRET')
     token = get_reddit_token(client_id, client_secret)
@@ -76,7 +77,7 @@ def scrape_reddit(max_pages=10, subreddit=None, query=None):
     for post in first_page.get('data', {}).get('children', []):
         post_data = post.get('data', {})
         posts.append({
-            'id': post_data.get('id', ''),  # Add this line
+            'id': post_data.get('id', ''),
             'title': post_data.get('title', ''),
             'url': post_data.get('url', ''),
             'author': post_data.get('author', ''),
@@ -99,7 +100,7 @@ def scrape_reddit(max_pages=10, subreddit=None, query=None):
                     for post in data['data'].get('children', []):
                         post_data = post.get('data', {})
                         posts.append({
-                            'id': post_data.get('id', ''),  # Add this line
+                            'id': post_data.get('id', ''),
                             'title': post_data.get('title', ''),
                             'url': post_data.get('url', ''),
                             'author': post_data.get('author', ''),
@@ -112,4 +113,5 @@ def scrape_reddit(max_pages=10, subreddit=None, query=None):
             except Exception as e:
                 logger.error(f"Error processing page: {str(e)}")
 
+    logger.debug(f"Scraped {len(posts)} posts from Reddit")
     return posts

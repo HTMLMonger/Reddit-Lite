@@ -179,6 +179,10 @@ async function handleSearch(e) {
         
         console.log(`Rendered ${posts.length} posts`);
         
+        // Update pagination info
+        state.currentPage = data.current_page;
+        state.hasMore = state.currentPage < data.pages;
+        
         // Trigger lazy loading for the new content
         lazyLoadContent();
         
