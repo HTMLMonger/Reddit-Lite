@@ -75,7 +75,20 @@ function createPostElement(post, viewMode = 'grid') {
 // API calls
 const api = {
     async fetchPosts(params = {}) {
-        const queryString = new URLSearchParams(params).toString();
+        // Default to empty search if no specific query/subreddit
+        const defaultParams = {
+            query: '',
+            subreddit: 'all',  // Removed 'r/' prefix
+            pages: 1
+        };
+        const mergedParams = { ...defaultParams, ...params };
+        
+        // Clean up subreddit parameter by removing 'r/' if present
+        if (mergedParams.subreddit) {
+            mergedParams.subreddit = mergedParams.subreddit.replace(/^r\//, '');
+        }
+        
+        const queryString = new URLSearchParams(mergedParams).toString();
         const response = await fetch(`/search?${queryString}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return response.json();
@@ -86,19 +99,25 @@ const api = {
         state.loading = true;
         
         try {
-            const data = await api.fetchPosts({ page: state.currentPage, per_page: 20 });
+            const data = await api.fetchPosts({ 
+                pages: 1,  // Always fetch 1 page at a time
+                per_page: 20,
+                page: state.currentPage 
+            });
+            
             if (data.posts?.length) {
                 const viewMode = elements.postsContainer.classList.contains('posts-grid') ? 'grid' : 'list';
                 const newPosts = data.posts.map(post => createPostElement(post, viewMode)).join('');
                 elements.postsContainer.insertAdjacentHTML('beforeend', newPosts);
                 
                 state.currentPage++;
-                state.hasMore = state.currentPage <= data.pages;
+                state.hasMore = data.posts.length >= 20; // If we got less than 20 posts, there are no more
             } else {
                 state.hasMore = false;
             }
         } catch (error) {
             console.error('Error loading posts:', error);
+            state.hasMore = false;
         } finally {
             state.loading = false;
         }
