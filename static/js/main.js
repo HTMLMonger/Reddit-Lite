@@ -154,15 +154,12 @@ async function handleSearch(e) {
         elements.loadingIndicator.style.display = 'flex';
         elements.postsContainer.innerHTML = '';
         
-        const query = document.getElementById('searchQuery').value.trim();
-        const subreddit = document.getElementById('subreddit').value.trim();
-        const pages = document.getElementById('numPages').value || '1';
+        const formData = new FormData(e.target);
+        const searchParams = new URLSearchParams(formData);
         
-        const params = new URLSearchParams({ query, subreddit, pages });
+        console.log('Sending search request with params:', searchParams.toString());
         
-        console.log('Sending search request with params:', params.toString());
-        
-        const response = await fetch(`/search?${params.toString()}`);
+        const response = await fetch(`/search?${searchParams.toString()}`);
         const data = await response.json();
         
         if (!response.ok) {
