@@ -4,6 +4,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+class Post(db.Model):
+    id = db.Column(db.String(20), primary_key=True)
+    # ...existing code...
+
 def init_db(force=False):
     """Initialize the database and create all tables."""
     try:
