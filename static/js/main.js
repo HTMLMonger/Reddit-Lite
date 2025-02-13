@@ -170,12 +170,15 @@ async function handleSearch(e) {
         
         const params = new URLSearchParams({ query, subreddit, pages });
         
+        console.log('Sending search request with params:', params.toString());
+        
         const response = await fetch(`/search?${params.toString()}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('Received search response:', data);
         
         if (data.error) {
             throw new Error(data.error);
@@ -188,10 +191,13 @@ async function handleSearch(e) {
         }
         
         const viewMode = elements.postsContainer.classList.contains('posts-grid') ? 'grid' : 'list';
-        elements.postsContainer.innerHTML = posts.map(post => createPostElement(post, viewMode)).join('');
+        const postsHTML = posts.map(post => createPostElement(post, viewMode)).join('');
+        elements.postsContainer.innerHTML = postsHTML;
         
-        // Log the number of posts rendered
         console.log(`Rendered ${posts.length} posts`);
+        
+        // Trigger lazy loading for the new content
+        lazyLoadContent();
         
     } catch (error) {
         console.error('Search error:', error);
