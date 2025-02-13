@@ -20,69 +20,70 @@
             margin: 5px;
             padding: 5px;
         }
-    </style>
-</head>
-<body>
+    </style> { background-color: #f0f0f0 !important; }
+</head>tyle>
+<body>>
     <div class="container-fluid">
-        <div class="app-container">
-            <!-- Sidebar -->
-            <div class="sidebar">
+        <div class="app-container" style="display: flex; min-height: 100vh;">
+            <!-- Sidebar -->ainer">
+            <div class="sidebar" style="width: 300px; background-color: #f8f9fa; padding: 20px;">
                 <div class="sidebar-content">
                     <div class="logo-container">
                         <img src="{{ url_for('static', filename='images/reddit-logo.png') }}" alt="Reddit Logo" class="logo">
-                        <h1>Reddit Scraper</h1>
-                    </div>
+                        <h1>Reddit Scraper</h1>tatic', filename='images/reddit-logo.png') }}" alt="Reddit Logo" class="logo">
+                    </div>1>Reddit Scraper</h1>
                     <div class="search-container">
                         <form id="searchForm" class="d-flex flex-column gap-3">
                             <input type="text" id="searchQuery" class="form-control" placeholder="Enter search query">
                             <input type="text" id="subreddit" class="form-control" placeholder="Subreddit (optional)">
                             <input type="number" id="numPages" class="form-control" placeholder="Number of pages" min="1" max="10" value="1">
-                            <button type="submit" class="btn btn-primary">Search</button>
-                        </form>
+                            <button type="submit" class="btn btn-primary">Search</button>holder="Number of pages" min="1" max="10" value="1">
+                        </form>tton type="submit" class="btn btn-primary">Search</button>
                         <div class="view-toggle mt-3">
                             <div class="btn-group w-100" role="group">
                                 <button type="button" class="btn btn-outline-secondary active" data-view="grid">
-                                    <i class="fas fa-th"></i> Grid View
-                                </button>
+                                    <i class="fas fa-th"></i> Grid Viewtline-secondary active" data-view="grid">
+                                </button>ass="fas fa-th"></i> Grid View
                                 <button type="button" class="btn btn-outline-secondary" data-view="list">
-                                    <i class="fas fa-list"></i> List View
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                                    <i class="fas fa-list"></i> List Viewine-secondary" data-view="list">
+                                </button>ass="fas fa-list"></i> List View
+                            </div>button>
+                        </div>div>
+                    </div>div>
                     <div class="last-updated">
                         Last updated: {{ now if now else 'Never' }}
-                    </div>
-                </div>
+                    </div>st updated: {{ now if now else 'Never' }}
+                </div>div>
+            </div>div>
             </div>
-
             <!-- Main Content -->
-            <div class="main-content">
+            <div class="main-content" style="flex: 1; padding: 20px;">
                 <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-                <div id="posts-container" class="posts-grid">
+                <div id="posts-container" class="posts-grid" style="display: grid; gap: 20px;">nger" style="display: none;"></div>
                     <!-- Posts will be dynamically inserted here -->
-                </div>
+                </div>-- Posts will be dynamically inserted here -->
                 <div id="loading-indicator" class="centered-loading" style="display: none;">Loading...</div>
-            </div>
-        </div>
+            </div>iv id="loading-indicator" class="centered-loading" style="display: none;">Loading...</div>
+        </div>div>
+    </div>div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>strap.bundle.min.js"></script>
+    <script>src="{{ url_for('static', filename='js/main.js') }}"></script>
         // Inline critical JavaScript
         document.addEventListener('DOMContentLoaded', () => {
             const posts = document.querySelectorAll('.post-card');
             const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
+                entries.forEach(entry => {ionObserver((entries) => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            });
+                        observer.unobserve(entry.target);le');
+                    }   observer.unobserve(entry.target);
+                }); }
+            }); });
             posts.forEach(post => observer.observe(post));
-        });
+        }); posts.forEach(post => observer.observe(post));
     </script>
-</body>
+</body>cript>
+</html>
 </html>

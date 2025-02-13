@@ -99,6 +99,7 @@ const api = {
 
 // Post rendering with lazy loading
 function createPostElement(post, viewMode = 'grid') {
+    console.log('Creating post element:', post);
     const truncatedSelftext = utils.truncateText(post.selftext || 'No content available', viewMode); // Now properly passing 'grid' or 'list'
     const truncatedTitle = utils.truncateText(post.title, 'title');
     
@@ -144,6 +145,7 @@ function lazyLoadContent() {
 // Event handlers
 async function handleSearch(e) {
     e.preventDefault();
+    console.log('Search initiated');
     state.currentPage = 1;
     state.hasMore = true;
     
@@ -252,6 +254,7 @@ async function checkDebugInfo() {
 
 // Initialize
 function init() {
+    console.log('Initializing app');
     // Set up infinite scroll
     const observer = new IntersectionObserver(
         entries => entries.forEach(entry => {
