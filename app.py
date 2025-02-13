@@ -38,7 +38,7 @@ class Post(db.Model):
     __tablename__ = 'post'
     __table_args__ = {'extend_existing': True}
     
-    id = db.Column(db.String(20), primary_key=True)  # Change this line
+    id = db.Column(db.String(20), primary_key=True)
     title = db.Column(db.String(300))
     url = db.Column(db.String(500))
     author = db.Column(db.String(100))
@@ -47,6 +47,7 @@ class Post(db.Model):
     num_comments = db.Column(db.Integer)
     created_utc = db.Column(db.Float)
     selftext = db.Column(db.Text)
+
     __table_args__ = (
         db.Index('idx_created_utc', 'created_utc'),
         db.Index('idx_subreddit', 'subreddit'),
