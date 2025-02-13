@@ -263,13 +263,3 @@ def not_found_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
-
-if __name__ == '__main__':
-    if init_db(force=True):
-        print("Database reinitialized successfully")
-    else:
-        print("Failed to reinitialize database")
-    
-    # Use environment variables for host and port
-    port = int(os.getenv('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)

@@ -64,7 +64,7 @@ const api = {
         const response = await fetch(`/search?${queryString}`);
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || `HTTP error! status: ${response.status}`);
+            throw new Error(data.error || data.details || `HTTP error! status: ${response.status}`);
         }
         return data;
     },
@@ -168,6 +168,10 @@ async function handleSearch(e) {
         }
         
         console.log('Received search response:', data);
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
         
         const posts = data.posts || [];
         if (posts.length === 0) {
