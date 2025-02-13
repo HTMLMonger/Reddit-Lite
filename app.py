@@ -35,6 +35,9 @@ cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 db = SQLAlchemy(app)
 
 class Post(db.Model):
+    __tablename__ = 'post'
+    __table_args__ = {'extend_existing': True}
+    
     id = db.Column(db.String(20), primary_key=True)  # Change this line
     title = db.Column(db.String(300))
     url = db.Column(db.String(500))

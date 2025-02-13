@@ -1,4 +1,4 @@
-from app import app, db
+from app import app, db, Post  # Import Post from app.py
 import logging
 
 logging.basicConfig(level=logging.INFO)
