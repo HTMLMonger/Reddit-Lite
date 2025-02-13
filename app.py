@@ -157,7 +157,6 @@ def search():
         subreddit = request.args.get('subreddit', '').strip()
         pages = min(int(request.args.get('pages', 1)), 10)  # Limit to max 10 pages
         
-        # Validate input
         if pages < 1:
             return jsonify({'error': 'Pages must be at least 1'}), 400
             
@@ -175,8 +174,8 @@ def search():
         if not posts:
             return jsonify({'posts': [], 'message': 'No posts found'})
 
-        # Format posts for response
         formatted_posts = [{
+            'id': post.get('id', ''),
             'title': post['title'],
             'url': post['url'],
             'author': post['author'],
@@ -187,6 +186,7 @@ def search():
             'selftext': post.get('selftext', '')
         } for post in posts]
 
+        logger.debug(f"Returning {len(formatted_posts)} posts")
         return jsonify({
             'posts': formatted_posts,
             'total': len(formatted_posts),

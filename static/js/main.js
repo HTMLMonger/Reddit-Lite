@@ -164,16 +164,11 @@ async function handleSearch(e) {
         elements.loadingIndicator.style.display = 'flex';
         elements.postsContainer.innerHTML = '';
         
-        // Get form values directly from elements
         const query = document.getElementById('searchQuery').value.trim();
         const subreddit = document.getElementById('subreddit').value.trim();
         const pages = document.getElementById('numPages').value || '1';
         
-        // Build search parameters
-        const params = new URLSearchParams();
-        if (query) params.append('query', query);
-        if (subreddit) params.append('subreddit', subreddit.replace(/^r\//, ''));
-        params.append('pages', pages);
+        const params = new URLSearchParams({ query, subreddit, pages });
         
         const response = await fetch(`/search?${params.toString()}`);
         if (!response.ok) {
@@ -195,7 +190,11 @@ async function handleSearch(e) {
         const viewMode = elements.postsContainer.classList.contains('posts-grid') ? 'grid' : 'list';
         elements.postsContainer.innerHTML = posts.map(post => createPostElement(post, viewMode)).join('');
         
+        // Log the number of posts rendered
+        console.log(`Rendered ${posts.length} posts`);
+        
     } catch (error) {
+        console.error('Search error:', error);
         elements.errorMessage.textContent = 'Error performing search: ' + error.message;
         elements.errorMessage.style.display = 'block';
     } finally {
