@@ -48,7 +48,7 @@ const elements = {
 
 // Post rendering
 function createPostElement(post, viewMode = 'grid') {
-    const truncatedSelftext = utils.truncateText(post.selftext || 'No content available', viewMode);
+    const truncatedSelftext = utils.truncateText(post.selftext || 'No content available', viewMode); // Now properly passing 'grid' or 'list'
     const truncatedTitle = utils.truncateText(post.title, 'title');
     
     return `
@@ -59,7 +59,7 @@ function createPostElement(post, viewMode = 'grid') {
                     <span class="subreddit">r/${post.subreddit}</span>
                     <span class="author">u/${post.author}</span>
                 </div>
-                <div class="post-preview">${truncatedSelftext}</div>
+                <div class="post-preview ${viewMode === 'list' ? 'list-view' : ''}">${truncatedSelftext}</div>
                 <div class="post-stats">
                     <span class="score">${utils.formatNumber(post.score)} points</span>
                     <span class="comments">${utils.formatNumber(post.num_comments)} comments</span>
