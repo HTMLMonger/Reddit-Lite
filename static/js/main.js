@@ -46,35 +46,17 @@ const elements = {
     viewToggleButtons: document.querySelectorAll('.view-toggle button')
 };
 
-// Post rendering
-function createPostElement(post, viewMode = 'grid') {
-    const truncatedSelftext = utils.truncateText(post.selftext || 'No content available', viewMode); // Now properly passing 'grid' or 'list'
-    const truncatedTitle = utils.truncateText(post.title, 'title');
-    
-    return `
-        <div class="post-card">
-            <div class="post-content">
-                <h3 class="post-title">${truncatedTitle}</h3>
-                <div class="post-meta">
-                    <span class="subreddit">r/${post.subreddit}</span>
-                    <span class="author">u/${post.author}</span>
-                </div>
-                <div class="post-preview ${viewMode === 'list' ? 'list-view' : ''}">${truncatedSelftext}</div>
-                <div class="post-stats">
-                    <span class="score">${utils.formatNumber(post.score)} points</span>
-                    <span class="comments">${utils.formatNumber(post.num_comments)} comments</span>
-                </div>
-            </div>
-            <div class="post-actions">
-                <a href="${post.url}" target="_blank" class="btn btn-primary">View Post</a>
-            </div>
-        </div>
-    `;
-}
+// Client-side cache
+const postCache = new Map();
 
 // API calls
 const api = {
     async fetchPosts(params = {}) {
+        const cacheKey = JSON.stringify(params);
+        if (postCache.has(cacheKey)) {
+            return postCache.get(cacheKey);
+        }
+
         // Default to empty search if no specific query/subreddit
         const defaultParams = {
             query: '',
@@ -91,7 +73,10 @@ const api = {
         const queryString = new URLSearchParams(mergedParams).toString();
         const response = await fetch(`/search?${queryString}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return response.json();
+        const data = await response.json();
+
+        postCache.set(cacheKey, data);
+        return data;
     },
 
     async loadMorePosts() {
@@ -123,6 +108,50 @@ const api = {
         }
     }
 };
+
+// Post rendering with lazy loading
+function createPostElement(post, viewMode = 'grid') {
+    const truncatedSelftext = utils.truncateText(post.selftext || 'No content available', viewMode); // Now properly passing 'grid' or 'list'
+    const truncatedTitle = utils.truncateText(post.title, 'title');
+    
+    // Construct the full Reddit post URL
+    const postUrl = `https://www.reddit.com/r/${post.subreddit}/comments/${post.id}`;
+    
+    return `
+        <div class="post-card">
+            <div class="post-content">
+                <h3 class="post-title">${truncatedTitle}</h3>
+                <div class="post-meta">
+                    <span class="subreddit">r/${post.subreddit}</span>
+                    <span class="author">u/${post.author}</span>
+                </div>
+                <div class="post-preview ${viewMode === 'list' ? 'list-view' : ''}" data-full-text="${post.selftext}">${truncatedSelftext}</div>
+                <div class="post-stats">
+                    <span class="score">${utils.formatNumber(post.score)} points</span>
+                    <span class="comments">${utils.formatNumber(post.num_comments)} comments</span>
+                </div>
+            </div>
+            <div class="post-actions">
+                <a href="${postUrl}" target="_blank" class="btn btn-primary">View Post</a>
+            </div>
+        </div>
+    `;
+}
+
+// Lazy load post content
+function lazyLoadContent() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const preview = entry.target;
+                preview.textContent = preview.dataset.fullText;
+                observer.unobserve(preview);
+            }
+        });
+    }, { rootMargin: '100px' });
+
+    document.querySelectorAll('.post-preview').forEach(preview => observer.observe(preview));
+}
 
 // Event handlers
 async function handleSearch(e) {
@@ -224,6 +253,9 @@ function init() {
 
     // Initial load
     api.loadMorePosts();
+
+    // Lazy load content
+    lazyLoadContent();
 }
 
 // Start the application

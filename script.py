@@ -30,7 +30,7 @@ def fetch_page(base_url, headers, params, after=None):
         logger.error(f"Error fetching page: {str(e)}")
         return None
 
-def scrape_reddit(max_pages=3, subreddit=None, query=None):
+def scrape_reddit(max_pages=10, subreddit=None, query=None):
     client_id = os.getenv('REDDIT_CLIENT_ID')
     client_secret = os.getenv('REDDIT_CLIENT_SECRET')
     token = get_reddit_token(client_id, client_secret)
@@ -76,6 +76,7 @@ def scrape_reddit(max_pages=3, subreddit=None, query=None):
     for post in first_page.get('data', {}).get('children', []):
         post_data = post.get('data', {})
         posts.append({
+            'id': post_data.get('id', ''),  # Add this line
             'title': post_data.get('title', ''),
             'url': post_data.get('url', ''),
             'author': post_data.get('author', ''),
@@ -98,6 +99,7 @@ def scrape_reddit(max_pages=3, subreddit=None, query=None):
                     for post in data['data'].get('children', []):
                         post_data = post.get('data', {})
                         posts.append({
+                            'id': post_data.get('id', ''),  # Add this line
                             'title': post_data.get('title', ''),
                             'url': post_data.get('url', ''),
                             'author': post_data.get('author', ''),

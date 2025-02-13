@@ -5,6 +5,8 @@ from script import scrape_reddit
 import logging
 import os
 import sys
+from flask_caching import Cache
+from sqlalchemy import text
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -25,6 +27,9 @@ app.config.update(
     SQLALCHEMY_MAX_OVERFLOW=20,  # Set the maximum overflow size of the connection pool
     SQLALCHEMY_POOL_RECYCLE=3600  # Set the recycle time for the database connections
 )
+
+# Configure caching
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 db = SQLAlchemy(app)
 
@@ -107,18 +112,23 @@ def scrape():
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/get_posts')
+@cache.cached(timeout=60)  # Cache for 1 minute
 def get_posts():
     try:
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         
-        posts = Post.query.order_by(Post.created_utc.desc())\
-            .paginate(page=page, per_page=per_page, error_out=False)
+        # Optimize query with joins and limit
+        posts = db.session.query(Post).order_by(Post.created_utc.desc())\
+            .limit(per_page).offset((page - 1) * per_page).all()
         
-        if not posts.items:
+        total_count = db.session.query(db.func.count(Post.id)).scalar()
+        
+        if not posts:
             return jsonify({'message': 'No posts found', 'posts': []}), 404
             
         posts_data = [{
+            'id': post.id,
             'title': post.title,
             'url': post.url,
             'subreddit': post.subreddit,
@@ -127,19 +137,20 @@ def get_posts():
             'created_utc': post.created_utc,
             'num_comments': post.num_comments,
             'selftext': post.selftext or ''
-        } for post in posts.items]
+        } for post in posts]
         
         return jsonify({
             'posts': posts_data,
-            'total': posts.total,
-            'pages': posts.pages,
-            'current_page': posts.page
+            'total': total_count,
+            'pages': (total_count + per_page - 1) // per_page,
+            'current_page': page
         })
     except Exception as e:
         logger.error(f"Error in get_posts route: {str(e)}")
         return jsonify({'error': 'An error occurred while fetching posts'}), 500
 
 @app.route('/search')
+@cache.cached(timeout=300)  # Cache for 5 minutes
 def search():
     try:
         query = request.args.get('query', '').strip()

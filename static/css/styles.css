@@ -201,6 +201,15 @@ body {
     height: 100%;
     box-sizing: border-box;
     margin-bottom: 8px; /* This adds bottom margin to each card */
+    contain: content;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.post-card.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .posts-list .post-card {
@@ -301,6 +310,7 @@ body {
     text-decoration: none;
     cursor: pointer;
     transition: var(--transition);
+    will-change: transform;
 }
 
 /* Utility Classes */
