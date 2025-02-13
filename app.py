@@ -243,6 +243,19 @@ def debug_db():
         logger.error(f"Database connection error: {str(e)}")
         return jsonify({'status': 'Error', 'message': str(e)}), 500
 
+@app.route('/debug')
+def debug_info():
+    try:
+        env_vars = {key: value for key, value in os.environ.items() if key.startswith('REDDIT_') or key == 'DATABASE_URL'}
+        db_status = 'Connected' if db.engine.pool.checkedout() > 0 else 'Not connected'
+        return jsonify({
+            'environment': env_vars,
+            'database_status': db_status,
+            'app_config': {key: str(value) for key, value in app.config.items()}
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.errorhandler(404)
 def not_found_error(error):
     return jsonify({'error': 'Not found'}), 404

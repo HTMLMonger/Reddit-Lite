@@ -62,11 +62,11 @@ const api = {
         
         const queryString = new URLSearchParams(mergedParams).toString();
         const response = await fetch(`/search?${queryString}`);
+        const data = await response.json();
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            throw new Error(data.error || `HTTP error! status: ${response.status}`);
         }
-        return response.json();
+        return data;
     },
 
     async loadMorePosts() {
@@ -235,6 +235,17 @@ async function checkDatabaseConnection() {
     }
 }
 
+// Add this function to check debug info
+async function checkDebugInfo() {
+    try {
+        const response = await fetch('/debug');
+        const data = await response.json();
+        console.log('Debug info:', data);
+    } catch (error) {
+        console.error('Error fetching debug info:', error);
+    }
+}
+
 // Initialize
 function init() {
     // Set up infinite scroll
@@ -264,6 +275,9 @@ function init() {
 
     // Check database connection
     checkDatabaseConnection();
+
+    // Check debug info
+    checkDebugInfo();
 }
 
 // Start the application
