@@ -62,7 +62,10 @@ const api = {
         
         const queryString = new URLSearchParams(mergedParams).toString();
         const response = await fetch(`/search?${queryString}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
         return response.json();
     },
 
@@ -85,6 +88,8 @@ const api = {
             }
         } catch (error) {
             console.error('Error loading posts:', error);
+            elements.errorMessage.textContent = 'Error loading posts: ' + error.message;
+            elements.errorMessage.style.display = 'block';
             state.hasMore = false;
         } finally {
             state.loading = false;
@@ -219,6 +224,17 @@ function handleViewToggle(e) {
     elements.postsContainer.innerHTML = posts.map(post => createPostElement(post, view)).join('');
 }
 
+// Add this function to check database connectivity
+async function checkDatabaseConnection() {
+    try {
+        const response = await fetch('/debug_db');
+        const data = await response.json();
+        console.log('Database connection status:', data);
+    } catch (error) {
+        console.error('Error checking database connection:', error);
+    }
+}
+
 // Initialize
 function init() {
     // Set up infinite scroll
@@ -245,6 +261,9 @@ function init() {
 
     // Lazy load content
     lazyLoadContent();
+
+    // Check database connection
+    checkDatabaseConnection();
 }
 
 // Start the application

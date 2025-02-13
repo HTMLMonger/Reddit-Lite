@@ -7,6 +7,7 @@ import os
 import sys
 from flask_caching import Cache
 from sqlalchemy import text
+import traceback
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -228,8 +229,19 @@ def search():
         })
 
     except Exception as e:
-        logger.error(f"Error in search route: {str(e)}", exc_info=True)
-        return jsonify({'error': 'An error occurred while searching'}), 500
+        logger.error(f"Error in search route: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({'error': 'An error occurred while searching', 'details': str(e)}), 500
+
+@app.route('/debug_db')
+def debug_db():
+    try:
+        # Try to make a simple query
+        result = db.session.query(Post).first()
+        return jsonify({'status': 'OK', 'message': 'Database connection successful'})
+    except Exception as e:
+        logger.error(f"Database connection error: {str(e)}")
+        return jsonify({'status': 'Error', 'message': str(e)}), 500
 
 @app.errorhandler(404)
 def not_found_error(error):
