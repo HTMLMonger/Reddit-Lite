@@ -156,16 +156,13 @@ async function handleSearch(e) {
         console.log('Sending search request with params:', params.toString());
         
         const response = await fetch(`/search?${params.toString()}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
         const data = await response.json();
-        console.log('Received search response:', data);
         
-        if (data.error) {
-            throw new Error(data.error);
+        if (!response.ok) {
+            throw new Error(data.error || `HTTP error! status: ${response.status}`);
         }
+        
+        console.log('Received search response:', data);
         
         const posts = data.posts || [];
         if (posts.length === 0) {

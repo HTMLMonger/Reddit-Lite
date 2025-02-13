@@ -175,13 +175,24 @@ def search():
         if total_count == 0:
             # If no results in database, scrape from Reddit
             logger.debug("No results in database, scraping from Reddit")
-            scraped_posts = scrape_reddit(query=query, max_pages=pages, subreddit=subreddit)
+            try:
+                scraped_posts = scrape_reddit(query=query, max_pages=pages, subreddit=subreddit)
+                logger.debug(f"Scraped {len(scraped_posts)} posts from Reddit")
+            except Exception as scrape_error:
+                logger.error(f"Error scraping Reddit: {str(scrape_error)}")
+                raise
             
             # Save scraped posts to database
             for post_data in scraped_posts:
                 post = Post(**post_data)
                 db.session.add(post)
-            db.session.commit()
+            try:
+                db.session.commit()
+                logger.debug("Successfully saved scraped posts to database")
+            except Exception as db_error:
+                logger.error(f"Error saving posts to database: {str(db_error)}")
+                db.session.rollback()
+                raise
 
             # Rerun the query
             posts_query = Post.query
@@ -217,7 +228,7 @@ def search():
         })
 
     except Exception as e:
-        logger.error(f"Error in search route: {str(e)}")
+        logger.error(f"Error in search route: {str(e)}", exc_info=True)
         return jsonify({'error': 'An error occurred while searching'}), 500
 
 @app.errorhandler(404)
