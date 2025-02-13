@@ -35,7 +35,7 @@ cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 db = SQLAlchemy(app)
 
 class Post(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(20), primary_key=True)  # Change this line
     title = db.Column(db.String(300))
     url = db.Column(db.String(500))
     author = db.Column(db.String(100))
@@ -193,15 +193,17 @@ def search():
             except Exception as db_error:
                 logger.error(f"Error saving posts to database: {str(db_error)}")
                 db.session.rollback()
-                raise
-
-            # Rerun the query
-            posts_query = Post.query
-            if query:
-                posts_query = posts_query.filter(Post.title.ilike(f'%{query}%'))
-            if subreddit:
-                posts_query = posts_query.filter(Post.subreddit == subreddit)
-            total_count = posts_query.count()
+                # Instead of raising an exception, we'll continue with the scraped posts
+                posts = scraped_posts
+                total_count = len(posts)
+            else:
+                # Rerun the query only if commit was successful
+                posts_query = Post.query
+                if query:
+                    posts_query = posts_query.filter(Post.title.ilike(f'%{query}%'))
+                if subreddit:
+                    posts_query = posts_query.filter(Post.subreddit == subreddit)
+                total_count = posts_query.count()
 
         posts = posts_query.order_by(Post.created_utc.desc()) \
                            .offset((page - 1) * per_page) \

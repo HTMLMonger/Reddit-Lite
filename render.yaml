@@ -10,8 +10,12 @@ services:
         value: 3.11.0
       - key: REDDIT_CLIENT_ID
         value: YOUR_REDDIT_CLIENT_ID
+        sync: false
       - key: REDDIT_CLIENT_SECRET
         value: YOUR_REDDIT_CLIENT_SECRET
+        sync: false
       - key: DATABASE_URL
         value: YOUR_DATABASE_URL
+        sync: false
+
     healthCheckPath: /
