@@ -8,7 +8,7 @@
     --white: #fff;
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
-    --sidebar-width: 100%;
+    --sidebar-width: 300px;
     --line-height: 1.5;
     --card-padding: 20px;
     --border-radius: 8px;
@@ -317,6 +317,10 @@ body {
 
 /* Mobile Styles */
 @media (max-width: 1064px) {
+
+    :root{
+        --sidebar-width: 1064px;
+    }
     body {
         padding: 0;
     }
