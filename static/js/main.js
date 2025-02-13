@@ -168,6 +168,10 @@ async function handleSearch(e) {
         
         console.log('Received search response:', data);
         
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
         const posts = data.posts || [];
         if (posts.length === 0) {
             elements.postsContainer.innerHTML = '<div class="no-posts-message">No posts found. Try different search terms!</div>';

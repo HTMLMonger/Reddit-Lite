@@ -156,7 +156,6 @@ def get_posts():
         return jsonify({'error': 'An error occurred while fetching posts'}), 500
 
 @app.route('/search')
-@cache.cached(timeout=300)
 def search():
     try:
         query = request.args.get('query', '').strip()
@@ -181,34 +180,22 @@ def search():
         if total_count == 0:
             # If no results in database, scrape from Reddit
             logger.debug("No results in database, scraping from Reddit")
-            try:
-                scraped_posts = scrape_reddit(query=query, max_pages=pages, subreddit=subreddit)
-                logger.debug(f"Scraped {len(scraped_posts)} posts from Reddit")
-            except Exception as scrape_error:
-                logger.error(f"Error scraping Reddit: {str(scrape_error)}")
-                raise
+            scraped_posts = scrape_reddit(query=query, max_pages=pages, subreddit=subreddit)
+            logger.debug(f"Scraped {len(scraped_posts)} posts from Reddit")
             
             # Save scraped posts to database
             for post_data in scraped_posts:
                 post = Post(**post_data)
                 db.session.add(post)
-            try:
-                db.session.commit()
-                logger.debug("Successfully saved scraped posts to database")
-            except Exception as db_error:
-                logger.error(f"Error saving posts to database: {str(db_error)}")
-                db.session.rollback()
-                # Instead of raising an exception, we'll continue with the scraped posts
-                posts = scraped_posts
-                total_count = len(posts)
-            else:
-                # Rerun the query only if commit was successful
-                posts_query = Post.query
-                if query:
-                    posts_query = posts_query.filter(Post.title.ilike(f'%{query}%'))
-                if subreddit:
-                    posts_query = posts_query.filter(Post.subreddit == subreddit)
-                total_count = posts_query.count()
+            db.session.commit()
+            
+            # Rerun the query
+            posts_query = Post.query
+            if query:
+                posts_query = posts_query.filter(Post.title.ilike(f'%{query}%'))
+            if subreddit:
+                posts_query = posts_query.filter(Post.subreddit == subreddit)
+            total_count = posts_query.count()
 
         posts = posts_query.order_by(Post.created_utc.desc()) \
                            .offset((page - 1) * per_page) \
