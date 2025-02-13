@@ -20,50 +20,72 @@
             margin: 5px;
             padding: 5px;
         }
-        body { background-color: #f0f0f0 !important; }
+        body { 
+            background-color: #f0f0f0 !important; 
+            overflow-x: hidden;
+        }
+        .app-container {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        .main-content {
+            overflow-x: hidden;
+        }
+        .post-card {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .post-content { overflow: hidden; }
+        .post-preview { word-wrap: break-word; overflow-wrap: break-word; }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="app-container" style="display: flex; min-height: 100vh;">
-            <!-- Sidebar -->
-            <div class="sidebar" style="width: 300px; background-color: #f8f9fa; padding: 20px;">
-                <div class="sidebar-content">
-                    <div class="logo-container">
-                        <img src="{{ url_for('static', filename='images/reddit-logo.png') }}" alt="Reddit Logo" class="logo">
-                        <h1>Reddit Scraper</h1>
-                    </div>
-                    <div class="search-container">
-                        <form id="searchForm" class="d-flex flex-column gap-3">
-                            <input type="text" id="searchQuery" name="query" class="form-control" placeholder="Enter search query">
-                            <input type="text" id="subreddit" name="subreddit" class="form-control" placeholder="Subreddit (optional)">
-                            <input type="number" id="numPages" name="pages" class="form-control" placeholder="Number of pages" min="1" max="10" value="1">
-                            <button type="submit" class="btn btn-primary">Search</button>
-                        </form>
-                        <div class="view-toggle mt-3">
-                            <div class="btn-group w-100" role="group">
-                                <button type="button" class="btn btn-outline-secondary active" data-view="grid">
-                                    <i class="fas fa-th"></i> Grid View
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary" data-view="list">
-                                    <i class="fas fa-list"></i> List View
-                                </button>
+    <div class="container-fluid p-0">
+        <div class="app-container">
+            <div class="row g-0">
+                <!-- Sidebar -->
+                <div class="col-md-3 col-lg-2">
+                    <div class="sidebar" style="background-color: #f8f9fa; padding: 20px;">
+                        <div class="sidebar-content">
+                            <div class="logo-container">
+                                <img src="{{ url_for('static', filename='images/reddit-logo.png') }}" alt="Reddit Logo" class="logo">
+                                <h1>Reddit Scraper</h1>
+                            </div>
+                            <div class="search-container">
+                                <form id="searchForm" class="d-flex flex-column gap-3">
+                                    <input type="text" id="searchQuery" name="query" class="form-control" placeholder="Enter search query">
+                                    <input type="text" id="subreddit" name="subreddit" class="form-control" placeholder="Subreddit (optional)">
+                                    <input type="number" id="numPages" name="pages" class="form-control" placeholder="Number of pages" min="1" max="10" value="1">
+                                    <button type="submit" class="btn btn-primary">Search</button>
+                                </form>
+                                <div class="view-toggle mt-3">
+                                    <div class="btn-group w-100" role="group">
+                                        <button type="button" class="btn btn-outline-secondary active" data-view="grid">
+                                            <i class="fas fa-th"></i> Grid View
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" data-view="list">
+                                            <i class="fas fa-list"></i> List View
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="last-updated">
+                                Last updated: {{ now if now else 'Never' }}
                             </div>
                         </div>
                     </div>
-                    <div class="last-updated">
-                        Last updated: {{ now if now else 'Never' }}
+                </div>
+                
+                <!-- Main Content -->
+                <div class="col-md-9 col-lg-10">
+                    <div class="main-content" style="padding: 20px;">
+                        <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                        <div id="posts-container" class="posts-grid" style="display: grid; gap: 20px;">
+                            <!-- Posts will be dynamically inserted here -->
+                        </div>
+                        <div id="loading-indicator" class="centered-loading" style="display: none;">Loading...</div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Main Content -->
-            <div class="main-content" style="flex: 1; padding: 20px;">
-                <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-                <div id="posts-container" class="posts-grid" style="display: grid; gap: 20px;">
-                    <!-- Posts will be dynamically inserted here -->
-                </div>
-                <div id="loading-indicator" class="centered-loading" style="display: none;">Loading...</div>
             </div>
         </div>
     </div>

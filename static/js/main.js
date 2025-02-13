@@ -100,10 +100,9 @@ const api = {
 // Post rendering with lazy loading
 function createPostElement(post, viewMode = 'grid') {
     console.log('Creating post element:', post);
-    const truncatedSelftext = utils.truncateText(post.selftext || 'No content available', viewMode); // Now properly passing 'grid' or 'list'
+    const truncatedSelftext = utils.truncateText(post.selftext || 'No content available', viewMode);
     const truncatedTitle = utils.truncateText(post.title, 'title');
     
-    // Construct the full Reddit post URL
     const postUrl = `https://www.reddit.com/r/${post.subreddit}/comments/${post.id}`;
     
     return `
@@ -113,15 +112,16 @@ function createPostElement(post, viewMode = 'grid') {
                 <div class="post-meta">
                     <span class="subreddit">r/${post.subreddit}</span>
                     <span class="author">u/${post.author}</span>
+                    <span class="created-time">${utils.formatTime(post.created_utc)}</span>
                 </div>
-                <div class="post-preview ${viewMode === 'list' ? 'list-view' : ''}" data-full-text="${post.selftext}">${truncatedSelftext}</div>
+                <div class="post-preview ${viewMode === 'list' ? 'list-view' : ''}">${truncatedSelftext}</div>
                 <div class="post-stats">
                     <span class="score">${utils.formatNumber(post.score)} points</span>
                     <span class="comments">${utils.formatNumber(post.num_comments)} comments</span>
                 </div>
             </div>
             <div class="post-actions">
-                <a href="${postUrl}" target="_blank" class="btn btn-primary">View Post</a>
+                <a href="${postUrl}" target="_blank" class="btn btn-primary">View on Reddit</a>
             </div>
         </div>
     `;
@@ -167,10 +167,6 @@ async function handleSearch(e) {
         }
         
         console.log('Received search response:', data);
-        
-        if (data.error) {
-            throw new Error(data.error);
-        }
         
         const posts = data.posts || [];
         if (posts.length === 0) {
