@@ -87,7 +87,7 @@ def scrape_reddit(max_pages=3, subreddit=None, query=None):
         })
 
     # Use ThreadPoolExecutor for concurrent requests
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         fetch_with_params = partial(fetch_page, base_url, headers, params)
         future_to_after = {executor.submit(fetch_with_params, after): after for after in after_tokens}
         
