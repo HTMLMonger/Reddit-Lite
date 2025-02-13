@@ -12,7 +12,7 @@ const utils = {
         const limits = {
             title: 100,
             grid: 300,
-            list: 1000
+            list: 2500  // Increased to 2000 characters for list view
         };
         const limit = limits[type] || limits.preview;
         return text.length <= limit ? text : 

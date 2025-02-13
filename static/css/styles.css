@@ -152,14 +152,39 @@ body {
 .posts-list .post-preview {
     flex: 1;
     padding-right: 0;
-    max-height: 4.8em; /* Approximately 9 lines */
+    max-height: calc(1.6em * 12); /* Increased height to accommodate more text */
+    min-height: calc(1.6em * 2);
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    line-clamp: 9;
-    -webkit-line-clamp: 9;
+    line-clamp: 12;
+    -webkit-line-clamp: 12;
     -webkit-box-orient: vertical;
     margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+    position: relative;
+}
+
+.posts-list .post-preview::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px; /* Reduced fade height */
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        var(--white) 100%
+    );
+    opacity: 0.8; /* Make fade more subtle */
+    pointer-events: none;
+    display: none; /* Only show fade if text is truncated */
+}
+
+.posts-list .post-preview.truncated::after {
+    display: block;
 }
 
 .posts-list .post-stats {
@@ -169,15 +194,16 @@ body {
 }
 
 .posts-list .post-actions {
-    width: 100%;
+    width: 100%;  /* Changed from 80% to 100% */
     flex-shrink: 0;
-    align-self: flex-start;
+    align-self: stretch;  /* Changed from flex-start to stretch */
     margin-top: 10px;
 }
 
 .posts-list .post-actions .btn {
-    max-width: 200px; /* Limit button width */
-    margin: 0 auto; /* Center the button */
+    max-width: 100%;  /* Changed from 200px to 100% */
+    width: 100%;
+    margin: 0;  /* Remove auto margins */
 }
 
 /* Post Cards */
@@ -291,6 +317,8 @@ body {
     border-radius: 4px;
     font-weight: 600;
     text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
 }
 
 /* Utility Classes */
@@ -487,15 +515,16 @@ body {
 }
 
 .posts-list .post-actions {
-    width: 80%;
+    width: 80%;  /* Changed from 80% to 100% */
     flex-shrink: 0;
-    align-self: flex-start;
+    align-self: stretch;  /* Changed from flex-start to stretch */
     margin-top: 10px;
 }
 
 .posts-list .post-actions .btn {
-    max-width: 200px; /* Limit button width */
-    margin: 0 auto; /* Center the button */
+    max-width: 100%;  /* Changed from 200px to 100% */
+    width: 80%;
+    margin: 0;  /* Remove auto margins */
 }
 
 /* Mobile Adjustments */
