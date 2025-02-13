@@ -12,6 +12,9 @@ def init_db(force=False):
     """Initialize the database and create all tables."""
     try:
         with app.app_context():
+            db_url = app.config.get('SQLALCHEMY_DATABASE_URI', 'Not set')
+            logger.info(f"Attempting to connect to database: {db_url}")
+            
             if force:
                 db.drop_all()
             db.create_all()

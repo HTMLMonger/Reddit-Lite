@@ -8,6 +8,7 @@ import sys
 from flask_caching import Cache
 from sqlalchemy import text
 import traceback
+from sqlalchemy.exc import SQLAlchemyError
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -253,13 +254,26 @@ def debug_db():
 def debug_info():
     try:
         env_vars = {key: value for key, value in os.environ.items() if key.startswith('REDDIT_') or key == 'DATABASE_URL'}
-        db_status = 'Connected' if db.engine.pool.checkedout() > 0 else 'Not connected'
+        db_url = app.config.get('SQLALCHEMY_DATABASE_URI', 'Not set')
+        
+        # Test database connection
+        db_status = 'Not connected'
+        db_error = None
+        try:
+            db.session.execute(text('SELECT 1'))
+            db_status = 'Connected'
+        except SQLAlchemyError as e:
+            db_error = str(e)
+
         return jsonify({
             'environment': env_vars,
+            'database_url': db_url,
             'database_status': db_status,
-            'app_config': {key: str(value) for key, value in app.config.items()}
+            'database_error': db_error,
+            'app_config': {key: str(value) for key, value in app.config.items() if key != 'SQLALCHEMY_DATABASE_URI'}
         })
     except Exception as e:
+        logger.error(f"Error in debug route: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.errorhandler(404)
