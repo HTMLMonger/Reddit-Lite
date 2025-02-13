@@ -3,15 +3,21 @@ services:
     name: reddit-scraper
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: |
-python init_db.py && gunicorn app:app
+    startCommand: python init_db.py && gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: REDDIT_CLIENT_ID
-        value: YOUR_REDDIT_CLIENT_ID
+        value: YOUR_REDDIT_ID
+        sync: false
       - key: REDDIT_CLIENT_SECRET
-        value: YOUR_REDDIT_CLIENT_SECRET
+        value: YOUR_REDDIT_SECRET
+        sync: false
       - key: DATABASE_URL
         value: YOUR_DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
     healthCheckPath: /
