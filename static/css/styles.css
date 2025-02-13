@@ -474,6 +474,14 @@ body {
     margin-top: 10px;
 }
 
+/* Add last-updated styles */
+.last-updated {
+    text-align: center;
+    padding-top: 10px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
 /* List View Specific Styles */
 .posts-list .post-card {
     display: flex;
@@ -543,7 +551,3 @@ body {
     }
 }
 
-.last-updated{
-    margin:auto;
-    padding:auto;
-}
