@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 from script import scrape_reddit
@@ -275,10 +275,6 @@ def debug_info():
     except Exception as e:
         logger.error(f"Error in debug route: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
-@app.route('/static_debug/<path:filename>')
-def static_debug(filename):
-    return send_from_directory(app.static_folder, filename)
 
 @app.errorhandler(404)
 def not_found_error(error):
