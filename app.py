@@ -116,7 +116,7 @@ def get_posts():
             .paginate(page=page, per_page=per_page, error_out=False)
         
         if not posts.items:
-            return jsonify({'message': 'No posts found'}), 404
+            return jsonify({'message': 'No posts found', 'posts': []}), 404
             
         posts_data = [{
             'title': post.title,
@@ -126,7 +126,7 @@ def get_posts():
             'score': post.score,
             'created_utc': post.created_utc,
             'num_comments': post.num_comments,
-            'selftext': post.selftext
+            'selftext': post.selftext or ''
         } for post in posts.items]
         
         return jsonify({
@@ -137,7 +137,7 @@ def get_posts():
         })
     except Exception as e:
         logger.error(f"Error in get_posts route: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'An error occurred while fetching posts'}), 500
 
 @app.route('/search')
 def search():
@@ -146,29 +146,56 @@ def search():
         subreddit = request.args.get('subreddit', '').strip()
         pages = min(int(request.args.get('pages', 1)), 10)  # Limit to max 10 pages
         
+        # Validate input
+        if pages < 1:
+            return jsonify({'error': 'Pages must be at least 1'}), 400
+            
         if not query and not subreddit:
-            return jsonify({'error': 'No search query or subreddit provided'}), 400
+            return jsonify({'error': 'Please provide either a search query or subreddit'}), 400
 
         logger.debug(f"Searching with query: {query}, subreddit: {subreddit}, pages: {pages}")
-        posts = scrape_reddit(query=query, max_pages=pages, subreddit=subreddit)
         
+        try:
+            posts = scrape_reddit(query=query, max_pages=pages, subreddit=subreddit)
+        except Exception as e:
+            logger.error(f"Error in scrape_reddit: {str(e)}")
+            return jsonify({'error': 'Failed to fetch posts from Reddit'}), 500
+
         if not posts:
             return jsonify({'posts': [], 'message': 'No posts found'})
 
-        # Store posts in database
-        Post.query.delete()
-        for post_data in posts:
-            post = Post(**post_data)
-            db.session.add(post)
-        db.session.commit()
-        
+        # Format posts for response
+        formatted_posts = [{
+            'title': post['title'],
+            'url': post['url'],
+            'author': post['author'],
+            'subreddit': post['subreddit'],
+            'score': post['score'],
+            'num_comments': post['num_comments'],
+            'created_utc': post['created_utc'],
+            'selftext': post.get('selftext', '')
+        } for post in posts]
+
         return jsonify({
-            'posts': posts,
+            'posts': formatted_posts,
+            'total': len(formatted_posts),
             'last_updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
+        
+    except ValueError as ve:
+        logger.error(f"Value error in search route: {str(ve)}")
+        return jsonify({'error': f'Invalid input: {str(ve)}'}), 400
     except Exception as e:
         logger.error(f"Error in search route: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'An error occurred while searching'}), 500
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify({'error': 'Not found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
     if init_db(force=True):

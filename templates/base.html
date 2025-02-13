@@ -1,9 +1,21 @@
-
-
-
-
-
-
-
-
-<!-- ...existing code... --></head>    <!-- ...existing code... -->    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">    <!-- ...existing code... --><head><html><!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ...existing code... -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <!-- ...existing code... -->
+</head>
+<body>
+    <!-- ...existing code... -->
+    <div class="search-container">
+        <form id="search-form">
+            <input type="text" id="subreddit" name="subreddit" placeholder="Enter subreddit">
+            <input type="number" id="numPages" name="numPages" placeholder="Number of pages" value="">
+            <button type="submit" class="fetch-button">Fetch Posts</button>
+        </form>
+    </div>
+    <div id="posts-container" class="posts-grid"></div>
+    <!-- ...existing code... -->
+</body>
+</html>

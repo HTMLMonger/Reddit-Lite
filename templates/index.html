@@ -25,30 +25,32 @@
         <div class="app-container">
             <!-- Sidebar -->
             <div class="sidebar">
-                <div class="logo-container">
-                    <img src="{{ url_for('static', filename='images/reddit-logo.png') }}" alt="Reddit Logo" class="logo">
-                    <h1>Reddit Scraper</h1>
-                </div>
-                <div class="search-container">
-                    <form id="searchForm" class="d-flex flex-column gap-3">
-                        <input type="text" id="searchQuery" class="form-control" placeholder="Enter search query">
-                        <input type="text" id="subreddit" class="form-control" placeholder="Subreddit (optional)">
-                        <input type="number" id="numPages" class="form-control" placeholder="Number of pages" min="1" max="10" value="1">
-                        <button type="submit" class="btn btn-primary">Search</button>
-                    </form>
-                    <div class="view-toggle mt-3">
-                        <div class="btn-group w-100" role="group">
-                            <button type="button" class="btn btn-outline-secondary active" data-view="grid">
-                                <i class="fas fa-th"></i> Grid View
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" data-view="list">
-                                <i class="fas fa-list"></i> List View
-                            </button>
+                <div class="sidebar-content">
+                    <div class="logo-container">
+                        <img src="{{ url_for('static', filename='images/reddit-logo.png') }}" alt="Reddit Logo" class="logo">
+                        <h1>Reddit Scraper</h1>
+                    </div>
+                    <div class="search-container">
+                        <form id="searchForm" class="d-flex flex-column gap-3">
+                            <input type="text" id="searchQuery" class="form-control" placeholder="Enter search query">
+                            <input type="text" id="subreddit" class="form-control" placeholder="Subreddit (optional)">
+                            <input type="number" id="numPages" class="form-control" placeholder="Number of pages" min="1" max="10" value="1">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </form>
+                        <div class="view-toggle mt-3">
+                            <div class="btn-group w-100" role="group">
+                                <button type="button" class="btn btn-outline-secondary active" data-view="grid">
+                                    <i class="fas fa-th"></i> Grid View
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" data-view="list">
+                                    <i class="fas fa-list"></i> List View
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="last-updated">
-                    Last updated: {{ now if now else 'Never' }}
+                    <div class="last-updated">
+                        Last updated: {{ now if now else 'Never' }}
+                    </div>
                 </div>
             </div>
 
@@ -56,233 +58,14 @@
             <div class="main-content">
                 <div id="error-message" class="alert alert-danger" style="display: none;"></div>
                 <div id="posts-container" class="posts-grid">
-                    {% if posts %}
-                        {% for post in posts %}
-                        <div class="post-card">
-                            <h3 class="post-title">{{ post.title }}</h3>
-                            <div class="post-meta">
-                                <span class="subreddit">r/{{ post.subreddit }}</span>
-                                <span class="author">u/{{ post.author }}</span>
-                            </div>
-                            {% if post.selftext %}
-                            <div class="post-content">{{ post.selftext }}</div>
-                            {% endif %}
-                            <div class="post-stats">
-                                <span class="score">{{ post.score }} points</span>
-                                <span class="comments">{{ post.num_comments }} comments</span>
-                            </div>
-                            <div class="post-actions">
-                                <a href="{{ post.url }}" target="_blank" class="btn btn-primary btn-sm">View Post</a>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <p>No posts found. Try searching for something!</p>
-                    {% endif %}
+                    <!-- Posts will be dynamically inserted here -->
                 </div>
+                <div id="loading-indicator" class="centered-loading" style="display: none;">Loading...</div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function scrapeReddit() {
-            const subreddit = document.getElementById('subreddit').value;
-            const maxPages = parseInt(document.getElementById('max_pages').value) || 3;
-            
-            fetch('/scrape', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    subreddit: subreddit,
-                    max_pages: maxPages
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    showError(data.error);
-                } else {
-                    fetchAndDisplayPosts();
-                }
-            })
-            .catch(error => {
-                showError('Error: ' + error);
-            });
-        }
-
-        function fetchAndDisplayPosts() {
-            const errorMessage = document.getElementById('error-message');
-            const postsContainer = document.getElementById('posts-container');
-            const viewMode = postsContainer.classList.contains('posts-grid') ? 'grid' : 'list';
-
-            fetch('/get_posts')
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    errorMessage.textContent = data.error;
-                    errorMessage.style.display = 'block';
-                    return;
-                }
-
-                postsContainer.innerHTML = '';
-                errorMessage.style.display = 'none';
-                
-                const posts = data.posts || [];
-                posts.forEach(post => {
-                    const postElement = createPostElement(post, viewMode);
-                    postsContainer.innerHTML += postElement;
-                });
-
-                if (posts.length === 0) {
-                    postsContainer.innerHTML = '<p>No posts found. Try searching for something!</p>';
-                }
-            })
-            .catch(error => {
-                errorMessage.textContent = error.message;
-                errorMessage.style.display = 'block';
-            });
-        }
-
-        function showError(message) {
-            const errorMessage = document.getElementById('error-message');
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-        }
-
-        function truncateText(text, type = 'preview') {
-            if (!text) return '';
-            
-            const limits = {
-                title: 100,
-                preview: {
-                    list: 2000,    // Increased from 1000
-                    grid: 150    
-                }
-            };
-            
-            const limit = type === 'title' ? limits.title : 
-                         (type === 'list' ? limits.preview.list : limits.preview.grid);
-            
-            if (text.length <= limit) return text;
-            
-            // Find the last complete word within the limit
-            const truncated = text.substr(0, limit).split(' ');
-            truncated.pop(); // Remove last (potentially partial) word
-            return truncated.join(' ') + '...';
-        }
-
-        document.getElementById('searchForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const query = document.getElementById('searchQuery').value;
-            const subreddit = document.getElementById('subreddit').value.trim();
-            const pages = document.getElementById('numPages').value;
-            
-            const errorMessage = document.getElementById('error-message');
-            const postsContainer = document.getElementById('posts-container');
-            
-            try {
-                errorMessage.style.display = 'none';
-                postsContainer.innerHTML = '<div class="text-center">Loading...</div>';
-                
-                // Build the search URL based on parameters
-                let searchUrl = '/search?';
-                const params = new URLSearchParams();
-                
-                if (query) {
-                    params.append('query', query);
-                }
-                if (subreddit) {
-                    // Remove "r/" prefix if user included it
-                    const cleanSubreddit = subreddit.replace(/^r\//, '');
-                    params.append('subreddit', cleanSubreddit);
-                }
-                params.append('pages', pages);
-                
-                const response = await fetch(`/search?${params.toString()}`);
-                const data = await response.json();
-                
-                if (data.error) {
-                    errorMessage.textContent = data.error;
-                    errorMessage.style.display = 'block';
-                    return;
-                }
-                
-                // Update posts display
-                const posts = data.posts || [];
-                if (posts.length === 0) {
-                    postsContainer.innerHTML = '<p>No posts found. Try different search terms!</p>';
-                    return;
-                }
-                
-                postsContainer.innerHTML = posts.map(post => `
-                    <div class="post-card">
-                        <h3 class="post-title">${post.title}</h3>
-                        <div class="post-meta">
-                            <span class="subreddit">r/${post.subreddit}</span>
-                            <span class="author">u/${post.author}</span>
-                        </div>
-                        <div class="post-preview">
-                            ${post.selftext || 'No content available'}
-                        </div>
-                        <div class="post-stats">
-                            <span class="score">${post.score} points</span>
-                            <span class="comments">${post.num_comments} comments</span>
-                        </div>
-                        <div class="post-actions">
-                            <a href="${post.url}" target="_blank" class="btn btn-primary btn-sm">View Post</a>
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                errorMessage.textContent = 'Error performing search: ' + error;
-                errorMessage.style.display = 'block';
-            }
-        });
-
-        document.querySelectorAll('.view-toggle button').forEach(button => {
-            button.addEventListener('click', function() {
-                const view = this.dataset.view;
-                const container = document.getElementById('posts-container');
-                
-                // Update active button
-                document.querySelectorAll('.view-toggle button').forEach(btn => 
-                    btn.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Update container class
-                container.className = view === 'grid' ? 'posts-grid' : 'posts-list';
-                
-                // Refresh posts display to apply new layout
-                fetchAndDisplayPosts();
-            });
-        });
-
-        function createPostElement(post, viewMode) {
-            const template = `
-                <div class="post-card">
-                    <h3 class="post-title">${post.title}</h3>
-                    <div class="post-meta">
-                        <span class="subreddit">r/${post.subreddit}</span>
-                        <span class="author">u/${post.author}</span>
-                    </div>
-                    <div class="post-preview">
-                        ${post.selftext || 'No content available'}
-                    </div>
-                    <div class="post-stats">
-                        <span class="score">${post.score} points</span>
-                        <span class="comments">${post.num_comments} comments</span>
-                    </div>
-                    <div class="post-actions">
-                        <a href="${post.url}" target="_blank" class="btn btn-primary btn-sm">View Post</a>
-                    </div>
-                </div>
-            `;
-            return template;
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
