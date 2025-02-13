@@ -166,11 +166,6 @@ function handleViewToggle(e) {
     elements.postsContainer.className = '';
     elements.postsContainer.classList.add(view === 'grid' ? 'posts-grid' : 'posts-list');
     
-    // Force reflow to ensure grid layout is applied
-    elements.postsContainer.style.display = 'none';
-    elements.postsContainer.offsetHeight; // Force reflow
-    elements.postsContainer.style.display = view === 'grid' ? 'grid' : 'flex';
-    
     // Refresh current posts with new layout
     const posts = Array.from(elements.postsContainer.querySelectorAll('.post-card'))
         .map(card => ({
@@ -183,8 +178,8 @@ function handleViewToggle(e) {
             url: card.querySelector('.post-actions a').href
         }));
     
-    elements.postsContainer.innerHTML = posts.map(post => 
-        createPostElement(post, view)).join('');
+    // Re-render with the correct view mode
+    elements.postsContainer.innerHTML = posts.map(post => createPostElement(post, view)).join('');
 }
 
 // Initialize
