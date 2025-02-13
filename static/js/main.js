@@ -52,31 +52,18 @@ const postCache = new Map();
 // API calls
 const api = {
     async fetchPosts(params = {}) {
-        const cacheKey = JSON.stringify(params);
-        if (postCache.has(cacheKey)) {
-            return postCache.get(cacheKey);
-        }
-
-        // Default to empty search if no specific query/subreddit
         const defaultParams = {
             query: '',
-            subreddit: 'all',  // Removed 'r/' prefix
-            pages: 1
+            subreddit: '',
+            page: 1,
+            per_page: 20
         };
         const mergedParams = { ...defaultParams, ...params };
-        
-        // Clean up subreddit parameter by removing 'r/' if present
-        if (mergedParams.subreddit) {
-            mergedParams.subreddit = mergedParams.subreddit.replace(/^r\//, '');
-        }
         
         const queryString = new URLSearchParams(mergedParams).toString();
         const response = await fetch(`/search?${queryString}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-
-        postCache.set(cacheKey, data);
-        return data;
+        return response.json();
     },
 
     async loadMorePosts() {
@@ -84,11 +71,7 @@ const api = {
         state.loading = true;
         
         try {
-            const data = await api.fetchPosts({ 
-                pages: 1,  // Always fetch 1 page at a time
-                per_page: 20,
-                page: state.currentPage 
-            });
+            const data = await api.fetchPosts({ page: state.currentPage });
             
             if (data.posts?.length) {
                 const viewMode = elements.postsContainer.classList.contains('posts-grid') ? 'grid' : 'list';
@@ -96,7 +79,7 @@ const api = {
                 elements.postsContainer.insertAdjacentHTML('beforeend', newPosts);
                 
                 state.currentPage++;
-                state.hasMore = data.posts.length >= 20; // If we got less than 20 posts, there are no more
+                state.hasMore = state.currentPage <= data.pages;
             } else {
                 state.hasMore = false;
             }

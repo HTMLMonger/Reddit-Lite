@@ -150,52 +150,48 @@ def get_posts():
         return jsonify({'error': 'An error occurred while fetching posts'}), 500
 
 @app.route('/search')
-@cache.cached(timeout=300)  # Cache for 5 minutes
+@cache.cached(timeout=300)
 def search():
     try:
         query = request.args.get('query', '').strip()
         subreddit = request.args.get('subreddit', '').strip()
-        pages = min(int(request.args.get('pages', 1)), 10)  # Limit to max 10 pages
-        
-        if pages < 1:
-            return jsonify({'error': 'Pages must be at least 1'}), 400
-            
-        if not query and not subreddit:
-            return jsonify({'error': 'Please provide either a search query or subreddit'}), 400
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
 
-        logger.debug(f"Searching with query: {query}, subreddit: {subreddit}, pages: {pages}")
-        
-        try:
-            posts = scrape_reddit(query=query, max_pages=pages, subreddit=subreddit)
-        except Exception as e:
-            logger.error(f"Error in scrape_reddit: {str(e)}")
-            return jsonify({'error': 'Failed to fetch posts from Reddit'}), 500
+        # Use database query instead of scraping
+        posts_query = Post.query
 
-        if not posts:
-            return jsonify({'posts': [], 'message': 'No posts found'})
+        if query:
+            posts_query = posts_query.filter(Post.title.ilike(f'%{query}%'))
+        if subreddit:
+            posts_query = posts_query.filter(Post.subreddit == subreddit)
+
+        posts = posts_query.order_by(Post.created_utc.desc()) \
+                           .offset((page - 1) * per_page) \
+                           .limit(per_page) \
+                           .all()
+
+        total_count = posts_query.count()
 
         formatted_posts = [{
-            'id': post.get('id', ''),
-            'title': post['title'],
-            'url': post['url'],
-            'author': post['author'],
-            'subreddit': post['subreddit'],
-            'score': post['score'],
-            'num_comments': post['num_comments'],
-            'created_utc': post['created_utc'],
-            'selftext': post.get('selftext', '')
+            'id': post.id,
+            'title': post.title,
+            'url': post.url,
+            'author': post.author,
+            'subreddit': post.subreddit,
+            'score': post.score,
+            'num_comments': post.num_comments,
+            'created_utc': post.created_utc,
+            'selftext': post.selftext or ''
         } for post in posts]
 
-        logger.debug(f"Returning {len(formatted_posts)} posts")
         return jsonify({
             'posts': formatted_posts,
-            'total': len(formatted_posts),
-            'last_updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            'total': total_count,
+            'pages': (total_count + per_page - 1) // per_page,
+            'current_page': page
         })
-        
-    except ValueError as ve:
-        logger.error(f"Value error in search route: {str(ve)}")
-        return jsonify({'error': f'Invalid input: {str(ve)}'}), 400
+
     except Exception as e:
         logger.error(f"Error in search route: {str(e)}")
         return jsonify({'error': 'An error occurred while searching'}), 500
